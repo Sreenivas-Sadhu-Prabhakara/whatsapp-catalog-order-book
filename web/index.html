@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'; connect-src 'self'">
+  <title>Product catalogue and order book for a small shop · Open MSME</title>
+  <meta name="description" content="Keep your catalogue and your orders on your own machine, and get the chat message and the prefilled link already written — what was ordered, what it comes to, when it is coming.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/accent.css">
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/theme-init.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <span class="brand"><span class="dot"></span><b>Open MSME</b><span class="tag">catalogue &amp; orders</span></span>
+      <span class="sp"></span>
+      <a class="home" href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a>
+      <button class="themer" data-themer type="button">Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="eyebrow">Food &amp; small retail &middot; India &amp; the Philippines</div>
+        <h1>Product catalogue and order book for a small shop</h1>
+        <p class="lede">Your catalogue and your orders, on your own machine, adding themselves up. Every order keeps the price it was taken at, every day gets one list of what to make, and every message a customer needs comes out already written &mdash; with a prefilled chat link beside it. <strong>This tool sends nothing itself.</strong> You read the message and send it, from your own phone.</p>
+        <div class="who">
+          <span class="pill">Home kitchens, bakers, pickle and snack makers, tiffin sellers</span>
+          <span class="pill reg">RFC 3986 percent-encoding &middot; ITU-T E.164 numbering</span>
+          <span class="pill">Runs offline &middot; one binary</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Which part of the book">
+          <button type="button" data-tab="today" aria-pressed="true">Today</button>
+          <button type="button" data-tab="orders" aria-pressed="false">Orders</button>
+          <button type="button" data-tab="new" aria-pressed="false">Take an order</button>
+          <button type="button" data-tab="catalogue" aria-pressed="false">Catalogue</button>
+          <button type="button" data-tab="share" aria-pressed="false">Share the catalogue</button>
+          <button type="button" data-tab="shop" aria-pressed="false">The shop</button>
+        </div>
+        <span class="sp"></span>
+        <span class="saving" id="saving" aria-live="polite"></span>
+      </div>
+
+      <div class="note" id="flash" hidden></div>
+      <noscript><div class="note">This page is the interface to the tool running on your own machine, and it needs JavaScript to draw itself. Nothing it does leaves the machine.</div></noscript>
+
+      <!-- Today -->
+      <section id="panel-today">
+        <div class="cols calc">
+          <section class="card">
+            <h2>The day's sheet</h2>
+            <div class="field">
+              <label for="day-on">Which day <span class="hint">pick a date to see its orders</span></label>
+              <div class="inp"><input type="date" id="day-on"></div>
+            </div>
+            <div class="result-primary">
+              <div class="k">To collect on this day</div>
+              <div class="v" id="day-collect">&mdash;</div>
+              <div class="sub" id="day-sub">Pick a day and this says what is going out and what is owed.</div>
+            </div>
+
+            <h3 class="spaced">To make</h3>
+            <div class="table-scroll">
+              <table class="breakdown">
+                <thead><tr><th>Item</th><th class="num">Quantity</th><th class="num">Orders</th></tr></thead>
+                <tbody id="day-make"></tbody>
+              </table>
+            </div>
+
+            <h3 class="spaced">Going out</h3>
+            <div class="table-scroll">
+              <table class="breakdown">
+                <thead><tr><th>When</th><th>Customer</th><th class="num">Total</th><th class="num">To collect</th></tr></thead>
+                <tbody id="day-orders"></tbody>
+              </table>
+            </div>
+
+            <div class="btnrow">
+              <a class="btn ghost" id="dl-day" href="/api/day.csv">The day as CSV</a>
+            </div>
+          </section>
+
+          <div class="side">
+            <section class="card">
+              <h2>The whole book</h2>
+              <table class="breakdown" id="book-table"><tbody></tbody></table>
+              <h3 class="spaced">Days with work on them</h3>
+              <ul class="plainlist" id="book-days"></ul>
+            </section>
+
+            <section class="card" id="daysheet-card">
+              <h2>Send the day's sheet</h2>
+              <p class="hint">For your own notes, or to whoever is helping in the kitchen. It carries no customer's phone number.</p>
+              <pre id="day-text"></pre>
+              <div class="btnrow" id="day-links"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders -->
+      <section id="panel-orders" hidden>
+        <div class="cols calc">
+          <section class="card">
+            <h2>Orders</h2>
+            <div class="field">
+              <label for="order-filter">Show <span class="hint">newest first</span></label>
+              <select id="order-filter"></select>
+            </div>
+            <div class="table-scroll">
+              <table class="breakdown">
+                <thead><tr><th>Order</th><th>Wanted</th><th class="num">Total</th><th class="num">Owed</th><th>Stage</th></tr></thead>
+                <tbody id="order-rows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="side">
+            <section class="card" id="order-card">
+              <h2 id="order-title">Pick an order</h2>
+              <div id="order-detail"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Take an order -->
+      <section id="panel-new" hidden>
+        <div class="cols calc">
+          <section class="card">
+            <h2>Take an order</h2>
+            <p class="hint">Each line takes the price from the catalogue as it stands now, and keeps it. A price change afterwards does not move this order.</p>
+
+            <div class="row2">
+              <div class="field">
+                <label for="new-name">Customer</label>
+                <div class="inp"><input type="text" id="new-name" autocomplete="off"></div>
+              </div>
+              <div class="field">
+                <label for="new-phone">Phone <span class="hint">for the chat link</span></label>
+                <div class="inp"><input type="text" id="new-phone" autocomplete="off" inputmode="tel"></div>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label for="new-fulfilment">Delivery or pickup</label>
+                <select id="new-fulfilment"></select>
+              </div>
+              <div class="field">
+                <label for="new-email">Email <span class="hint">optional</span></label>
+                <div class="inp"><input type="text" id="new-email" autocomplete="off" inputmode="email"></div>
+              </div>
+            </div>
+
+            <div class="field" id="new-address-field">
+              <label for="new-address">Address <span class="hint">needed for a delivery</span></label>
+              <div class="inp"><input type="text" id="new-address" autocomplete="off"></div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label for="new-wanted">Wanted on</label>
+                <div class="inp"><input type="date" id="new-wanted"></div>
+              </div>
+              <div class="field">
+                <label for="new-slot">Part of the day</label>
+                <select id="new-slot"></select>
+              </div>
+            </div>
+
+            <h3 class="spaced">What they want</h3>
+            <div class="table-scroll">
+              <table class="breakdown">
+                <thead><tr><th>Item</th><th class="num">Quantity</th><th>Note</th><th class="num">Amount</th><th></th></tr></thead>
+                <tbody id="new-lines"></tbody>
+              </table>
+            </div>
+            <div class="btnrow">
+              <button class="btn ghost" type="button" id="new-add-line">Add a line</button>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label for="new-fee">Delivery charge</label>
+                <div class="inp"><input type="text" id="new-fee" inputmode="decimal" value="0"></div>
+              </div>
+              <div class="field">
+                <label for="new-discount">Discount</label>
+                <div class="inp"><input type="text" id="new-discount" inputmode="decimal" value="0"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="new-discount-reason">Why the discount <span class="hint">a discount with no reason becomes the new price</span></label>
+              <div class="inp"><input type="text" id="new-discount-reason" autocomplete="off"></div>
+            </div>
+            <div class="field">
+              <label for="new-note">Anything else</label>
+              <div class="inp"><input type="text" id="new-note" autocomplete="off"></div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn primary" type="button" id="new-save">Put it in the book</button>
+            </div>
+          </section>
+
+          <div class="side">
+            <section class="card sticky">
+              <h2>What it comes to</h2>
+              <div class="result-primary">
+                <div class="k">Total</div>
+                <div class="v" id="new-total">&mdash;</div>
+                <div class="sub" id="new-sub">Add a line and this adds itself up.</div>
+              </div>
+              <table class="breakdown"><tbody id="new-totals"></tbody></table>
+              <h3 class="spaced">Before you send it</h3>
+              <ul class="flags" id="new-problems"></ul>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Catalogue -->
+      <section id="panel-catalogue" hidden>
+        <div class="cols calc">
+          <section class="card">
+            <h2>What the shop sells</h2>
+            <div class="table-scroll">
+              <table class="breakdown">
+                <thead><tr><th>Item</th><th class="num">Price</th><th class="num">Per kg / litre / piece</th><th>Available</th><th></th></tr></thead>
+                <tbody id="catalogue-rows"></tbody>
+              </table>
+            </div>
+            <ul class="flags" id="catalogue-problems"></ul>
+            <div class="btnrow">
+              <a class="btn ghost" href="/api/catalogue.csv">The catalogue as CSV</a>
+              <a class="btn ghost" href="/api/orders.csv">Every order as CSV</a>
+            </div>
+          </section>
+
+          <div class="side">
+            <section class="card sticky">
+              <h2 id="product-title">Add a product</h2>
+              <div class="field">
+                <label for="p-code">Code <span class="hint">what an order line refers to</span></label>
+                <div class="inp"><input type="text" id="p-code" autocomplete="off"></div>
+              </div>
+              <div class="field">
+                <label for="p-name">Name <span class="hint">what the customer reads</span></label>
+                <div class="inp"><input type="text" id="p-name" autocomplete="off"></div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="p-price">Price</label>
+                  <div class="inp"><input type="text" id="p-price" inputmode="decimal"></div>
+                </div>
+                <div class="field">
+                  <label for="p-unit">Unit <span class="hint">jar, packet, box</span></label>
+                  <div class="inp"><input type="text" id="p-unit" autocomplete="off"></div>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="p-pack">Pack size</label>
+                  <div class="inp"><input type="text" id="p-pack" inputmode="decimal"></div>
+                </div>
+                <div class="field">
+                  <label for="p-measure">Measured in</label>
+                  <select id="p-measure"></select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="p-availability">Available</label>
+                  <select id="p-availability"></select>
+                </div>
+                <div class="field">
+                  <label for="p-notice">Days' notice</label>
+                  <div class="inp"><input type="text" id="p-notice" inputmode="numeric" value="0"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="p-min">Smallest you will sell <span class="hint">0 for no minimum</span></label>
+                <div class="inp"><input type="text" id="p-min" inputmode="decimal" value="0"></div>
+              </div>
+              <div class="field">
+                <label for="p-note">Note <span class="hint">goes out with the catalogue</span></label>
+                <div class="inp"><input type="text" id="p-note" autocomplete="off"></div>
+              </div>
+              <div class="field checkline">
+                <input type="checkbox" id="p-hidden">
+                <label for="p-hidden">Keep it off the shared catalogue</label>
+              </div>
+              <div class="btnrow">
+                <button class="btn primary" type="button" id="p-save">Save the product</button>
+                <button class="btn ghost" type="button" id="p-new">Start a new one</button>
+              </div>
+              <p class="note" id="p-per"></p>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Share -->
+      <section id="panel-share" hidden>
+        <div class="cols calc">
+          <section class="card">
+            <h2>The catalogue as one message</h2>
+            <p class="hint">Rebuilt from the catalogue every time you open this, so it is never out of date. Paste it into a broadcast, a status or a group.</p>
+            <pre id="share-text"></pre>
+            <div class="btnrow" id="share-links"></div>
+          </section>
+
+          <div class="side">
+            <section class="card sticky">
+              <h2>Will it fit?</h2>
+              <div class="result-primary">
+                <div class="k">Length</div>
+                <div class="v" id="share-chars">&mdash;</div>
+                <div class="sub" id="share-fit"></div>
+              </div>
+              <table class="breakdown"><tbody id="share-table"></tbody></table>
+              <ul class="flags" id="share-problems"></ul>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Shop -->
+      <section id="panel-shop" hidden>
+        <div class="cols calc">
+          <section class="card">
+            <h2>The shop</h2>
+            <p class="hint">This goes into the top and the foot of every message. It changes about once a year.</p>
+            <div class="row2">
+              <div class="field">
+                <label for="s-name">Shop name</label>
+                <div class="inp"><input type="text" id="s-name" autocomplete="off"></div>
+              </div>
+              <div class="field">
+                <label for="s-area">Area</label>
+                <div class="inp"><input type="text" id="s-area" autocomplete="off"></div>
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="s-currency">Prices in</label>
+                <select id="s-currency"></select>
+              </div>
+              <div class="field">
+                <label for="s-dial">Country code <span class="hint">completes a number typed without one</span></label>
+                <div class="inp"><input type="text" id="s-dial" inputmode="numeric"></div>
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="s-phone">Your own number</label>
+                <div class="inp"><input type="text" id="s-phone" autocomplete="off" inputmode="tel"></div>
+              </div>
+              <div class="field">
+                <label for="s-email">Your own email <span class="hint">optional</span></label>
+                <div class="inp"><input type="text" id="s-email" autocomplete="off" inputmode="email"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="s-payto">How a customer pays <span class="hint">your own words &mdash; this tool collects no money</span></label>
+              <div class="inp"><input type="text" id="s-payto" autocomplete="off"></div>
+            </div>
+            <div class="field">
+              <label for="s-how">How to order <span class="hint">the line at the foot of the shared catalogue</span></label>
+              <div class="inp"><input type="text" id="s-how" autocomplete="off"></div>
+            </div>
+            <div class="field">
+              <label for="s-closing">How a message ends</label>
+              <div class="inp"><input type="text" id="s-closing" autocomplete="off"></div>
+            </div>
+
+            <h3 class="spaced">Lengths</h3>
+            <p class="hint">None of these is a published guarantee. They are what the apps and the browsers are observed to accept, and they have changed before &mdash; so they are yours to change.</p>
+            <div class="row2">
+              <div class="field">
+                <label for="s-link">Longest link to offer</label>
+                <div class="inp"><input type="text" id="s-link" inputmode="numeric"></div>
+              </div>
+              <div class="field">
+                <label for="s-status">Characters a status holds</label>
+                <div class="inp"><input type="text" id="s-status" inputmode="numeric"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="s-message">Characters one message holds</label>
+              <div class="inp"><input type="text" id="s-message" inputmode="numeric"></div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn primary" type="button" id="s-save">Save the shop</button>
+            </div>
+          </section>
+
+          <div class="side">
+            <section class="card">
+              <h2>Start from a worked shop</h2>
+              <p class="hint">Replaces everything with a worked example, so you can see the whole tool before typing anything of your own.</p>
+              <div class="btnrow" id="sample-buttons"></div>
+              <h3 class="spaced">Empty the book</h3>
+              <p class="hint">Takes every order out and keeps the shop and the catalogue.</p>
+              <div class="btnrow">
+                <button class="btn ghost" type="button" id="clear-book">Empty the order book</button>
+              </div>
+              <h3 class="spaced">Where this is kept</h3>
+              <p class="note" id="where"></p>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <span>Open MSME &middot; open-source tool for MSMEs in India &amp; the Philippines &middot; MIT</span>
+      <span><a href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a></span>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

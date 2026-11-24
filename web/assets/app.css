@@ -1,0 +1,79 @@
+/* Layout for the catalogue and order book interface. The kit carries the
+   design system; this file carries only what this one tool's screens need. */
+
+.toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:18px 0 4px; }
+.toolbar .sp { margin-left:auto; }
+.saving { font-size:.82rem; color:var(--ink-3); font-family:var(--mono); }
+
+.note[data-level="bad"] { border-left-color:var(--bad); color:var(--ink-2); }
+.note[data-level="ok"] { border-left-color:var(--ok); color:var(--ink-2); }
+
+.side { display:grid; gap:22px; align-content:start; }
+
+section.card h3 { margin:0 0 10px; font-size:.95rem; color:var(--ink-2); }
+section.card h3.spaced { margin-top:22px; }
+
+.table-scroll { overflow-x:auto; }
+.breakdown td.wide { min-width:150px; }
+.breakdown tr.picked td { background:color-mix(in srgb, var(--tool) 10%, transparent); }
+.breakdown td .meta { display:block; font-size:.78rem; color:var(--ink-3); }
+.breakdown td .prod { font-weight:600; }
+.breakdown button.link {
+  font:inherit; font-size:.82rem; cursor:pointer; background:none; border:none; padding:0;
+  color:var(--accent); text-align:left;
+}
+.breakdown button.link:hover { text-decoration:underline; text-underline-offset:3px; }
+.breakdown input, .breakdown select { font-size:.85rem; padding:7px 9px; }
+.breakdown input.num { text-align:right; font-family:var(--mono); }
+
+.chip {
+  display:inline-block; font-family:var(--mono); font-size:.7rem; padding:2px 7px; border-radius:999px;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2); white-space:nowrap;
+}
+.chip.ok { color:var(--ok); border-color:color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.chip.warn { color:var(--warn); border-color:color-mix(in srgb, var(--warn) 40%, var(--line)); }
+.chip.bad { color:var(--bad); border-color:color-mix(in srgb, var(--bad) 40%, var(--line)); }
+
+.flags { list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+.flags li {
+  font-size:.85rem; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line);
+  border-left:3px solid var(--line-2); border-radius:8px; padding:9px 11px;
+}
+.flags li[data-severity="stop"] { border-left-color:var(--bad); }
+.flags li[data-severity="check"] { border-left-color:var(--warn); }
+.flags li .code { font-family:var(--mono); font-size:.72rem; color:var(--ink-3); display:block; }
+.flags li.none { border-left-color:var(--ok); color:var(--ink-3); }
+
+.plainlist { list-style:none; padding:0; margin:0; display:grid; gap:7px; }
+.plainlist li { font-size:.86rem; color:var(--ink-2); display:flex; gap:8px; justify-content:space-between; }
+.plainlist li.past { color:var(--bad); }
+.plainlist li .when { font-weight:600; }
+.plainlist li .what { font-family:var(--mono); font-size:.8rem; color:var(--ink-3); }
+
+.field.checkline { display:flex; align-items:center; gap:9px; }
+.field.checkline input { width:auto; }
+.field.checkline label { margin:0; font-weight:400; color:var(--ink-2); font-size:.86rem; }
+
+pre#share-text, pre#day-text, pre.message { white-space:pre-wrap; word-break:break-word; max-height:360px; overflow-y:auto; }
+
+.msgblock { border:1px solid var(--line); border-radius:var(--radius); padding:14px; margin:0 0 14px; background:var(--surface-2); }
+.msgblock h3 { margin:0 0 8px; font-size:.92rem; color:var(--ink); }
+.msgblock .why { font-size:.84rem; color:var(--ink-3); margin:0; }
+.msgblock pre { background:var(--surface); max-height:260px; }
+.msgblock .linkmeta { font-size:.76rem; color:var(--ink-3); font-family:var(--mono); margin:8px 0 0; }
+
+.detailrow { display:flex; gap:8px; flex-wrap:wrap; align-items:baseline; margin:0 0 8px; }
+.detailrow .k { font-size:.8rem; color:var(--ink-3); min-width:110px; }
+.detailrow .v { font-size:.9rem; color:var(--ink); }
+
+@media (min-width:860px){ .cols.calc { grid-template-columns:1.25fr .75fr; } }
+
+/* At 360px a pair of fields side by side leaves each about 160px, which is not
+   enough for a date or a price with a label above it. Below 420px they stack. */
+@media (max-width:420px){
+  .row2 { grid-template-columns:1fr; }
+  .toolbar .seg button { flex:1 1 auto; }
+  .plainlist li { flex-direction:column; gap:2px; }
+  .detailrow { flex-direction:column; gap:1px; }
+  .detailrow .k { min-width:0; }
+}

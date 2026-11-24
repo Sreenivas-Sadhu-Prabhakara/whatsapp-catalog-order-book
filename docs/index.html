@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'">
+  <title>Product catalogue and order book for a small shop · Open MSME</title>
+  <meta name="description" content="A free single-binary tool for home kitchens and small shops in India and the Philippines: keep your catalogue and your orders on your own machine, and get the chat message and the correctly encoded prefilled link already written. It sends nothing itself — you send it.">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:title" content="Product catalogue and order book for a small shop · Open MSME">
+  <meta property="og:description" content="Orders taken in a chat thread have no running total and no ledger. This keeps the catalogue and the order book on your own machine, and builds the message and the prefilled link for you to send.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/accent.css">
+  <script src="assets/theme-init.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">
+        <span class="dot"></span><b>Open MSME</b><span class="tag">catalogue &amp; orders</span>
+      </a>
+      <span class="sp"></span>
+      <a class="home" href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a>
+      <button class="themer" data-themer type="button">Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="eyebrow">Food &amp; small retail &middot; India &amp; the Philippines</div>
+        <h1>Product catalogue and order book for a small shop</h1>
+        <p class="lede">A home kitchen takes its orders in a chat thread. The orders work; the thread does not. There is no running total, no list of what tomorrow needs, and no record of what each order was agreed at &mdash; and the message that has to go back is typed out by hand every single time. This tool holds the catalogue and the order book on the shop's own machine, adds everything up, and hands over the message already written with a prefilled link beside it. <strong>It sends nothing itself.</strong> You read the message and send it, from your own phone, under your own name.</p>
+        <div class="who">
+          <span class="pill">Home bakers, pickle and snack makers, tiffin sellers, small shops</span>
+          <span class="pill reg">RFC 3986 percent-encoding &middot; ITU-T E.164 numbering</span>
+          <span class="pill">Runs offline &middot; one binary &middot; MIT</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <section class="prose">
+        <h2>What it does</h2>
+        <p>Two things, and the link between them.</p>
+        <p><strong>A catalogue.</strong> What the shop sells: a short code, a name, a price, a pack size, whether it is on the shelf or made to order and how much notice it needs, and the smallest quantity the shop will make. From the pack size it works out the price per kilogramme, per litre or per piece &mdash; the figure that makes a 500&nbsp;g jar at &#8377;320 and a 1&nbsp;kg jar at &#8377;580 comparable, and that a customer cannot work out from a chat thread.</p>
+        <p><strong>An order book.</strong> Who ordered what, for which day and which part of it, delivery or pickup, what it came to, what has been paid, and where the order has got to. Running totals per order and per day. Every order keeps the price it was taken at.</p>
+        <p><strong>And the messages.</strong> For each order: a confirmation, a note that it is ready, a request for the balance, and a receipt &mdash; each built from the book, each with a <code>wa.me</code> link that opens the customer's chat with the message already in it, and each with an email link and the text to copy as well.</p>
+
+        <div class="note"><strong>This tool cannot send a message, and does not try to.</strong> It has no messaging account, no payment account, no API key and no network connection of any kind &mdash; it makes no outbound request, ever. What it produces is text and links. You open the link, read what it is about to send, and send it yourself. Nothing is sent without you, and nothing can be: there is nothing in the binary that could.</p></div>
+
+        <h2>The link is the product</h2>
+        <p>Everything else here is bookkeeping. The part that is genuinely hard, and that goes wrong silently, is building the link.</p>
+        <p>A <code>wa.me</code> link carries the message in its query string, which means the message has to be percent-encoded &mdash; and a query string can be read two different ways:</p>
+        <ul>
+          <li><strong>The HTML form convention</strong>, in which a plus sign means a space. That is what every web framework applies, and what the standard library's query escaper writes for.</li>
+          <li><strong>Plain percent-decoding</strong>, RFC 3986, in which a plus sign means a plus sign and nothing else. That is what a chat client does with text handed to it in a link.</li>
+        </ul>
+        <p>Encode a space as a plus sign, which is the obvious thing to do, and under the second reading <em>every space in the message becomes a plus sign</em>. "2 jars of mango pickle" arrives as "2+jars+of+mango+pickle". Nothing errors. The link opens, the chat opens, and the message is wrong.</p>
+        <p>So this tool encodes to RFC 3986 &sect;2.3 and nothing less: every byte outside <code>A&ndash;Z a&ndash;z 0&ndash;9 - _ . ~</code> becomes a percent-triplet in upper-case hexadecimal, over the text's UTF-8 bytes. A space goes out as <code>%20</code>, which both readings agree on. A plus sign that really is in the shop's text goes out as <code>%2B</code> and comes back as a plus sign either way. There is nothing left for the two conventions to disagree about.</p>
+        <p>Which matters because a shop's own text is made of exactly the characters that break a link: <strong>&amp;</strong> in "Mango &amp; Lime", <strong>#</strong> in "Order #14", <strong>%</strong> in "20% off", <strong>+</strong> in "2+2 free", a newline between every line of a bill, a <strong>&#8377;</strong> or <strong>&#8369;</strong> on every figure, an emoji at the end, and product names in Devanagari, Tamil or Tagalog.</p>
+        <p>Every one of those is in the test suite, three times over: through the encoder, through a <code>wa.me</code> link and through a <code>mailto:</code> link. Each one is built, then parsed back out with the standard library's own URL parser &mdash; not with anything this tool wrote &mdash; under <em>both</em> readings, and has to come back identical character for character. There is also a test that demonstrates the naive encoder corrupting the same text, so that nobody later "simplifies" the encoder back to it.</p>
+
+        <h2>Length, which is the other silent failure</h2>
+        <p>A link that is too long does not error either. It simply does not open.</p>
+        <p>And the length is not the length it looks. A character of Devanagari is three UTF-8 bytes, which is nine characters of percent-encoded link; an emoji is four bytes and twelve characters. A 375-character message in Hindi is nearly three thousand characters of link, while looking like a short message. So the tool counts the encoded link, says how long it is, and where it is over the length this build will vouch for it stops offering the link and offers the text to copy instead &mdash; with the figure, so you can decide for yourself. The link is still built: a shop that knows its own client handles a longer one should not be stopped by this tool's caution.</p>
+        <p>The same accounting runs on the shared catalogue: its length in characters, whether it fits a status, whether it fits one message, and how many products are in it.</p>
+
+        <h2>The shareable catalogue</h2>
+        <p>One block of text, built from the catalogue, to paste into a broadcast, a status or a group. Available items first with the price, the pack size and the per-kilogramme figure; made-to-order items next, each saying how much notice it needs; sold-out items last and plainly marked, because leaving them off looks tidier and produces an order for them the same afternoon. Then the day the prices are from, how to order, and how to pay.</p>
+        <p><strong>It is built fresh every time it is asked for and never stored.</strong> That is the whole point: a price list kept as text goes stale the moment a price moves, and the shop that has been pasting the same block for two months is the shop arguing with a customer about &#8377;20. Change a price and ask for the text again; the text is right.</p>
+        <p>One detail that is easy to miss: WhatsApp reads <code>*</code>, <code>_</code>, <code>~</code> and a backtick as formatting. A product called "Kolhapuri ~extra hot~ chutney", wrapped in asterisks for emphasis, arrives with the words struck through and the asterisks showing. So a name carrying one of those characters is sent plain, and the catalogue says which name and why.</p>
+
+        <h2>The rule the book rests on</h2>
+        <p>A shop puts its prices up. An order taken last week is still owed at last week's price.</p>
+        <p>So an order line does not point at a catalogue price. It carries its own copy &mdash; of the price, and of the name, the pack size and the unit as they were at the moment the order was taken. Change the catalogue and nothing on any existing order moves. Delete the product and nothing moves. The bill the customer was given is still the bill.</p>
+        <p>What the tool does instead is <em>tell you</em>: for every line whose catalogue price has since changed, it shows the price it was taken at, the price now, and the difference, in both directions. Honouring the old price or ringing the customer is the shopkeeper's decision; the tool's job is to make sure they know there is a decision to make. It is reported as something to look at and never as something wrong, because the order is correct as it stands.</p>
+
+        <h2>What stops a message, and what is merely flagged</h2>
+        <p>An order with something wrong with it is still kept &mdash; a shop writes an order down as it is spoken and tidies it afterwards, and a book that refused to hold it would be useless. What is refused is the <em>message</em>, because a message is what the customer reads and holds the shop to.</p>
+        <p><strong>These stop a customer message being built:</strong> a line for something marked sold out; a line for no quantity at all, or a negative one; a line below the smallest quantity the shop will make; a line taken at no price; a made-to-order item wanted sooner than its notice period allows; a day earlier than the day the order was taken; an order with nothing on it; no customer name; a delivery with no address; a discount larger than the bill; a negative discount or delivery charge; more money received than is owed.</p>
+        <p><strong>These are listed to look at:</strong> a catalogue price that has moved since the order was taken; a line for a product no longer in the catalogue; no phone number, or one that cannot be made into a link; a number that does not look like a mobile; no day set; a product name carrying a formatting character; two products sharing a code; a made-to-order item with no notice period set.</p>
+        <p>Each one names the rule, in words a shopkeeper would use, against the line it is about.</p>
+
+        <h2>Phone numbers</h2>
+        <p>A <code>wa.me</code> link takes digits only, country code first, no plus sign, no spaces and no leading zero. A number in any other shape opens an error page rather than a chat, and nobody ever reports it. Nobody types numbers that way either, so the tool normalises what was typed:</p>
+        <ul>
+          <li>Spaces, brackets, hyphens, dashes and dots are punctuation and go.</li>
+          <li>A leading <code>+</code> means the number is already international. A leading <code>00</code> is the international prefix: it is dropped and the rest taken as international.</li>
+          <li>A single leading <code>0</code> is the trunk prefix: it is dropped and the shop's own country code goes in front. <code>098765 43210</code> is the same number as <code>+91 98765 43210</code>.</li>
+          <li>A number of exactly the market's national length is a national number and gets the country code. In India and the Philippines that is ten digits. Note that this is decided by <em>length</em> and not by the leading digits: an Indian number that happens to begin 91 is still a national number if it is ten digits long.</li>
+          <li>Anything else &mdash; eleven digits, thirteen digits, an extension, a letter &mdash; is refused with the reason, because guessing produces a number that looks right and reaches nobody.</li>
+        </ul>
+        <p>The result is checked against E.164's bounds, and the whole thing is tested against every shape a shopkeeper actually types, in both markets, plus a number from neither.</p>
+
+        <h2>The day's sheet</h2>
+        <p>The part a home kitchen uses every morning. For one day: <strong>what to make</strong>, added up across every order &mdash; not five orders to read through but "fourteen jars of mango, six packets of chakli, one box of laddu", which is one morning's work written down once. Then <strong>what goes out</strong>, in the order it goes out, with the money to collect from each. Then the totals: orders, items, value, collected, still to collect.</p>
+        <p>A cancelled order is shown and counted and is in neither the make list nor the money. A shop that makes a cancelled order's jars has lost the jars, and a shop whose takings include a cancelled order spends that evening looking for money nobody owes it. If the day's list needs something the catalogue now says is sold out, the sheet says so, because that is the shop's most urgent problem that morning.</p>
+
+        <h2>Who it's for</h2>
+        <p>The shop that takes its orders in a chat thread and has outgrown it: a home baker, a pickle or snack maker, a tiffin seller, a small shop with a delivery round. Anybody who is losing an order a week in a scroll-back, or who cannot answer "what do I owe you?" without reading four days of messages.</p>
+        <p>It assumes things with names and prices, orders with a day attached, and a phone. It needs no accounting system, no spreadsheet licence, no subscription and no internet connection.</p>
+
+        <h2>The standards it implements</h2>
+        <p>No statute governs a shop's own catalogue or its own order book. There is no prescribed form for either, and this tool invents none. What it does implement precisely is the handful of technical standards that decide whether a link works:</p>
+        <ul>
+          <li><strong>RFC 3986 &mdash; Uniform Resource Identifier (URI): Generic Syntax.</strong> &sect;2.3 defines the unreserved characters, which are the only ones left unencoded here. &sect;2.1 defines percent-encoding over octets, so the encoding runs over UTF-8 bytes and not over characters. &sect;6.2.2.1 says to produce upper-case hexadecimal, which is why a link built twice from the same message is byte-identical and can be compared against the last one.</li>
+          <li><strong>ITU-T Recommendation E.164 &mdash; the international public telecommunication numbering plan.</strong> A number is at most <strong>fifteen digits</strong> including the country code, written without a prefix, and never begins with a zero. That ceiling, and the shapes of national numbers in the two markets, are what the normaliser applies.</li>
+          <li><strong>ISO 4217</strong> gives both the Indian rupee and the Philippine peso <strong>two decimal places</strong>, which is why one scale serves both markets and why money is held as a whole number of paise or centavos.</li>
+          <li><strong>WhatsApp's own conventions</strong> for the <code>wa.me</code> link and for the four characters it reads as message formatting. These are not a standard and not a published guarantee: they are how the product behaves, they have changed before, and every figure that depends on them is yours to change in the settings.</li>
+        </ul>
+        <p>Nothing here is tax, licensing or food-safety software. A home food business in India needs an <strong>FSSAI registration or licence</strong>; one in the Philippines deals with <strong>DTI or SEC registration, a mayor's permit, BIR registration, and FDA requirements for processed food</strong>. This tool does not check, hold, record or file any of that, and keeping a catalogue in it is not evidence of anything. Those are separate obligations and you should confirm the current position with the authority or your own adviser.</p>
+
+        <h2>Install &amp; run</h2>
+        <p>One binary, standard library only, no external dependencies at all.</p>
+        <pre><code>git clone https://github.com/sreenivas-sadhu-prabhakara/whatsapp-catalog-order-book.git
+cd whatsapp-catalog-order-book
+go build -o catalog-order-book .
+./catalog-order-book
+
+# or, without building first
+go run .</code></pre>
+        <p>Then open <code>http://127.0.0.1:8080</code>. Two flags, if you want them:</p>
+        <pre><code>./catalog-order-book -addr 127.0.0.1:9000 -data /path/to/order-book.json</code></pre>
+        <p>Load one of the two worked shops first, to see the whole tool working before typing anything of your own: a pickle and snack kitchen in Pune pricing in rupees, and a home bakery in Quezon City pricing in pesos. Each comes with a catalogue that has something available, something made to order, something sold out and something kept off the shared list, and a book with orders at several stages &mdash; including one taken at a price the catalogue has since changed, and one wanted sooner than its notice period allows, so both rules can be seen working.</p>
+
+        <h2>What it stores</h2>
+        <p>One JSON file beside the binary, written atomically &mdash; a temporary file, flushed, then renamed over the old one, so a crash leaves either the old file or the new one and never half of either. It is readable in any text editor, because it is the shop's record and not a database. Money in it is text, never a float, so nothing that reads the file can round a price.</p>
+        <p>The file holds your customers' names, phone numbers and addresses, so it is written readable only by the user who runs the tool. <strong>Nothing leaves the machine.</strong> The tool binds to <code>127.0.0.1</code>, makes no outbound network call of any kind, and has no telemetry, no analytics, and no fonts, scripts or styles from anywhere else. A request arriving from another website is refused outright.</p>
+
+        <h2>Features</h2>
+        <div class="featgrid">
+          <div class="feat">
+            <h3>Links that survive real text</h3>
+            <p>Ampersands, hashes, plus signs, percent signs, newlines, emoji, &#8377; and &#8369;, Devanagari, Tamil and Tagalog &mdash; each tested through a real URL parser, under both ways a query string can be read, and required to come back identical.</p>
+          </div>
+          <div class="feat">
+            <h3>The price it was taken at</h3>
+            <p>Every order line keeps its own copy of the price, the name and the pack. Change the catalogue, or delete the product, and no bill already given moves. The change is reported, in both directions, as a decision for you.</p>
+          </div>
+          <div class="feat">
+            <h3>Figures that cannot drift</h3>
+            <p>Nothing in the money path is a floating-point number. Money is whole paise or centavos, quantity is thousandths, and each figure is rounded once &mdash; where a line becomes a figure on a bill &mdash; so the lines in the message add up to the total in the message.</p>
+          </div>
+          <div class="feat">
+            <h3>Comparable pack sizes</h3>
+            <p>The price per kilogramme, per litre or per piece, worked out from the pack size by one integer division. It is what makes a 500&nbsp;g jar and a 1&nbsp;kg jar comparable, and it is left off entirely where the pack has no stated size rather than guessed.</p>
+          </div>
+          <div class="feat">
+            <h3>A catalogue that is never stale</h3>
+            <p>The shareable text is rebuilt from the catalogue every time, with the day the prices are from on it, and with its length measured against what a status and a message hold.</p>
+          </div>
+          <div class="feat">
+            <h3>One list for the morning</h3>
+            <p>Everything a day needs, added up across its orders, with the orders in the sequence they go out and the money to collect from each. Cancelled orders counted and excluded from both.</p>
+          </div>
+          <div class="feat">
+            <h3>Numbers normalised properly</h3>
+            <p>A trunk prefix, an international prefix, brackets, dashes or nothing at all &mdash; all read correctly, and anything genuinely ambiguous refused with the reason rather than guessed.</p>
+          </div>
+          <div class="feat">
+            <h3>Yours to take away</h3>
+            <p>Every order, the whole catalogue and any day's sheet as CSV, with a byte-order mark so a spreadsheet reads the currency signs and the non-Latin names correctly. The orders file carries the price each line was taken at.</p>
+          </div>
+        </div>
+
+        <h2>Assumptions</h2>
+        <details class="assumptions">
+          <summary>The figures this build ships with, and what it assumes</summary>
+          <p><strong>No statutory figure is used at all.</strong> This tool computes no tax, no duty, no fee and no threshold. There is no rate anywhere in it. Every figure below is a length or a platform convention, and every one of them is overridable from the settings page.</p>
+          <p><strong>A link of 2,000 characters.</strong> <code>SafeLinkCharacters</code> is 2,000: inside what every browser, chat client and QR reader in common use handles. Above it behaviour stops being predictable and the failure is silent &mdash; the link simply does not open &mdash; so the tool stops vouching for the link and offers the text instead. It is a caution, not a law: the link is still built, and the limit is yours to raise if you know your own client handles more.</p>
+          <p><strong>A status of 700 characters.</strong> <code>StatusCharacters</code> is 700, taken as what a WhatsApp status holds. Not a published guarantee; a figure to measure against so the tool can say "this will not fit, send it as a broadcast" before you find out the hard way.</p>
+          <p><strong>A message of 65,536 characters.</strong> <code>MessageCharacters</code> is 65,536, taken as what one WhatsApp message holds.</p>
+          <p><strong>A number of at most 15 digits.</strong> <code>MaxPhoneDigits</code> is 15, which is E.164's own ceiling and the one figure here that <em>is</em> from a standard. <code>MinPhoneDigits</code> is 8, which is below any real international number and above the three or four digits a half-typed one has &mdash; a convention, chosen to catch a typing mistake.</p>
+          <p><strong>Ten-digit national numbers.</strong> A mobile number is ten digits in both India (beginning 6&ndash;9) and the Philippines (beginning 9). That is what lets the tool tell a number carrying its country code from one that is not.</p>
+          <p><strong>Two thousand orders.</strong> <code>maxOrders</code> is 2,000 kept in the file, oldest dropped first. A home kitchen takes a few a day, so that is a couple of years, and the file stays something a person can open.</p>
+          <p><strong>Rounding.</strong> Half away from zero &mdash; 2.5 to 3 and &minus;2.5 to &minus;3 &mdash; which is how a shopkeeper rounds and what a customer checking a bill expects. A line is rounded once, where it becomes a figure on the bill; the total is the sum of the lines as printed, never the rounding of an unrounded sum.</p>
+          <p><strong>Pack sizes.</strong> Weight in grams and shown in kilogrammes at a kilogramme or more; volume in millilitres and shown in litres at a litre or more; a count in pieces. The price per standard quantity is per kilogramme, per litre or per piece accordingly, and is omitted where it would only repeat the price.</p>
+          <p><strong>Dates.</strong> Calendar days with no time and no zone, because a delivery is on a day. A notice period counts in calendar days and is tested over 30- and 31-day month ends, over a year end, and into and out of the 29th of February in both a leap year and a common one.</p>
+          <p><strong>Discounts are amounts, not percentages.</strong> On purpose: the figure on the bill is the figure that was agreed, and nothing recomputes it later. A discount is asked for with a reason, because a discount with no reason becomes the new price.</p>
+          <p><strong>What it does not do.</strong> It sends no message and takes no payment. It is not connected to WhatsApp, to any messaging service, or to UPI, GCash or any payment provider &mdash; "how a customer pays" is a line of text you write, and "received" is what you tell the tool arrived. It does not check that a number is anybody's number, and it cannot: it makes no network call. It keeps no stock count. It computes no tax. And it cannot tell you whether a figure is <em>right</em> &mdash; a price entered wrong once is on every order taken at it.</p>
+        </details>
+
+        <div class="note">This tool keeps a record and writes messages. It is not advice, it is not a filing, and it sends nothing and collects nothing. Check every message before you send it &mdash; that is what the link is for, and why the text is always offered beside it. Where a registration, licence or tax obligation is involved, confirm the current position with the authority or your own adviser: rules change, and this page states what this build assumes rather than what is in force today.</div>
+
+        <h2>Licence</h2>
+        <p>MIT licensed, free forever, and open to read line by line &mdash; including the rules it applies, which live in one small package whose tests cover a rupee sign, an emoji and three scripts through a real URL parser; a plus sign read back two different ways; a 375-character message in Hindi that makes a 3,000-character link; a price put up after an order was taken; a product deleted from under an order; a line for something sold out; a line for no quantity; a discount bigger than the bill; more money received than is owed; two days' notice landing on the 29th of February; and a Manila landline that is not a mobile.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <span>Open MSME &middot; open-source tool for MSMEs in India &amp; the Philippines &middot; MIT</span>
+      <span><a href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a></span>
+    </div>
+  </footer>
+
+  <script src="assets/ui.js"></script>
+</body>
+</html>
